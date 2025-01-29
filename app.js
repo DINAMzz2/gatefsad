@@ -2,7 +2,7 @@ const express = require('express');
 const puppeteer = require('puppeteer');
 
 const app = express();
-const port = process.env.PORT || 3000; // Utilizando a variável de ambiente PORT
+const port = 3000;
 
 app.get('/', (req, res) => {
     res.send(`
@@ -104,32 +104,19 @@ app.get('/', (req, res) => {
                     noCaptchaDiv.style.display = "none";
 
                     try {
-                        const response = await fetch(`/detect?url=${encodeURIComponent(url)}`);
+                        const response = await fetch(\`/detect?url=\${encodeURIComponent(url)}\`);
+                        const result = await response.json();
+                        resultDiv.textContent = result.detected;
 
-                        // Verifica se a resposta foi bem-sucedida
-                        if (!response.ok) {
-                            throw new Error(`Erro no servidor: ${response.status} - ${response.statusText}`);
-                        }
-
-                        // Verifica se a resposta é JSON
-                        const contentType = response.headers.get("content-type");
-                        if (contentType && contentType.includes("application/json")) {
-                            const result = await response.json();
-                            resultDiv.textContent = result.detected;
-
-                            if (result.captchaDetected) {
-                                captchaDiv.textContent = "CAPTCHA Detectado!";
-                                captchaDiv.style.display = "block";
-                            } else {
-                                noCaptchaDiv.textContent = "Nenhum CAPTCHA Detectado.";
-                                noCaptchaDiv.style.display = "block";
-                            }
+                        if (result.captchaDetected) {
+                            captchaDiv.textContent = "CAPTCHA Detectado!";
+                            captchaDiv.style.display = "block";
                         } else {
-                            // Se não for JSON, exibe o erro de resposta inesperada
-                            throw new Error("Resposta inesperada do servidor. Não é um JSON válido.");
+                            noCaptchaDiv.textContent = "Nenhum CAPTCHA Detectado.";
+                            noCaptchaDiv.style.display = "block";
                         }
                     } catch (error) {
-                        resultDiv.textContent = `Erro ao detectar: ${error.message}`;
+                        resultDiv.textContent = \`Erro: \${error.message}\`;
                         captchaDiv.style.display = "none";
                         noCaptchaDiv.style.display = "none";
                     }
@@ -143,7 +130,7 @@ app.get('/', (req, res) => {
 app.get('/detect', async (req, res) => {
     const url = req.query.url;
     if (!url) {
-        return res.status(400).send('URL é obrigatória');
+        return res.status(400).send('URL is required');
     }
 
     try {
@@ -156,7 +143,7 @@ app.get('/detect', async (req, res) => {
         const htmlLower = content.toLowerCase();
 
         const gateways = {
-            // Adicione aqui seus padrões de gateway...
+            // Global
             'PayPal': [/paypal/, /pp\.com/, /paypal\.com/],
             'Stripe': [/stripe/, /card payments/, /stripe checkout/, /powered by stripe/, /stripe.com/],
             'Square': [/squareup/, /square.com/],
