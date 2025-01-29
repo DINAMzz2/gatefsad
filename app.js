@@ -1,8 +1,9 @@
 const express = require('express');
-const puppeteer = require('puppeteer');
+const axios = require('axios');
+const cheerio = require('cheerio');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
     res.send(`
@@ -106,6 +107,7 @@ app.get('/', (req, res) => {
                     try {
                         const response = await fetch(\`/detect?url=\${encodeURIComponent(url)}\`);
                         const result = await response.json();
+
                         resultDiv.textContent = result.detected;
 
                         if (result.captchaDetected) {
@@ -134,61 +136,75 @@ app.get('/detect', async (req, res) => {
     }
 
     try {
-        const browser = await puppeteer.launch();
-        const page = await browser.newPage();
-        await page.goto(url, { waitUntil: 'networkidle2' });
-        const content = await page.content();
-        await browser.close();
-
-        const htmlLower = content.toLowerCase();
+        const { data } = await axios.get(url);
+        const htmlLower = data.toLowerCase();
+        const $ = cheerio.load(htmlLower);
 
         const gateways = {
             // Global
-            'PayPal': [/paypal/, /pp\.com/, /paypal\.com/],
-            'Stripe': [/stripe/, /card payments/, /stripe checkout/, /powered by stripe/, /stripe.com/],
-            'Square': [/squareup/, /square.com/],
-            'Adyen': [/adyen/, /adyen.com/],
-            'Worldpay': [/worldpay/, /worldpay.com/],
-            'Authorize.Net': [/authorize.net/, /authorize.net/],
-            '2Checkout': [/2checkout/, /2checkout.com/],
-            'Skrill': [/skrill/, /skrill.com/],
-            'Amazon Pay': [/amazon pay/, /pay.amazon.com/],
-            'Braintree': [/braintree/, /braintreepayments.com/],
-            'WePay': [/wepay/, /wepay.com/],
+            'PayPal': [/paypal\.com/, /pp\.com/, /paypal checkout/, /powered by paypal/, /paypal\//],
+            'Stripe': [
+                /stripe\.com/,
+                /stripe checkout/,
+                /powered by stripe/,
+                /card payments with stripe/,
+                /stripe\.js/,
+                /stripe gateway/,
+                /stripe\.api/,
+                /stripe integration/,
+                /powered by stripe\./,
+                /using stripe/,
+                /stripe terminal/,
+                /stripe payment/,
+                /stripe connect/,
+                /stripe express/
+            ],
+            'Square': [/squareup\.com/, /square\.com/, /powered by square/, /square payments/],
+            'Adyen': [/adyen\.com/, /powered by adyen/, /adyen checkout/],
+            'Worldpay': [/worldpay\.com/, /powered by worldpay/, /worldpay payments/],
+            'Authorize.Net': [/authorize\.net/, /powered by authorize\.net/, /authorize payments/],
+            '2Checkout': [/2checkout\.com/, /powered by 2checkout/, /2checkout payments/],
+            'Skrill': [/skrill\.com/, /powered by skrill/, /skrill checkout/],
+            'Amazon Pay': [/pay\.amazon\.com/, /powered by amazon pay/, /amazon payments/],
+            'Braintree': [/braintreepayments\.com/, /powered by braintree/, /braintree payments/],
+            'WePay': [/wepay\.com/, /powered by wepay/, /wepay payments/],
 
             // Nacional (Brasil)
-            'Mercado Pago': [/mercadopago/, /mercado pago/, /mercadopago.com.br/],
-            'PagSeguro': [/pagseguro/, /pagseguro.uol.com.br/],
-            'Cielo': [/cielo.com.br/, /cielo/],
-            'Stone': [/stone.com.br/, /stone/],
-            'Oi Pagamentos': [/oi pagamentos/, /oi pagseguro/],
-            'PicPay': [/picpay/, /picpay.com/],
-            'Rede': [/userede.com.br/, /rede/],
-            'Vindi': [/vindi/, /vindi.com.br/],
-            'GetNet': [/getnet/, /getnet.com.br/],
-            'Iugu': [/iugu/, /iugu.com/],
-            'Nuvemshop': [/nuvemshop/, /nuvem shop/, /nuvemshop.com.br/],
-            'Pagar.me': [/pagarme/, /pagar.me/],
-            'Payflow': [/payflow/, /payflow.com.br/],
-            'B3': [/b3/, /b3.com.br/],
-            'EBANX': [/ebanx/, /ebanx.com/],
-            'Magento': [/magento/, /magento.com/],
-            'Braspag': [/braspag/, /braspag.com.br/],
+            'Mercado Pago': [/mercadopago\.com\.br/, /mercado pago checkout/, /powered by mercado pago/, /mercadopago\//],
+            'PagSeguro': [/pagseguro\.uol\.com\.br/, /powered by pagseguro/, /pagseguro payments/],
+            'Cielo': [/cielo\.com\.br/, /powered by cielo/, /cielo payments/],
+            'Stone': [/stone\.com\.br/, /powered by stone/, /stone payments/],
+            'Oi Pagamentos': [/oi\.pagseguro/, /powered by oi pagamentos/],
+            'PicPay': [/picpay\.com/, /powered by picpay/, /picpay payments/],
+            'Rede': [/userede\.com\.br/, /powered by rede/, /rede payments/],
+            'Vindi': [/vindi\.com\.br/, /powered by vindi/, /vindi payments/],
+            'GetNet': [/getnet\.com\.br/, /powered by getnet/, /getnet payments/],
+            'Iugu': [/iugu\.com/, /powered by iugu/, /iugu payments/],
+            'Nuvemshop': [/nuvemshop\.com\.br/, /powered by nuvemshop/, /nuvemshop payments/],
+            'Pagar.me': [/pagar\.me/, /powered by pagar.me/, /pagarme/, /soluções de pagamento pagar\.me/, /pagarme payments/],
+            'Payflow': [/payflow\.com\.br/, /powered by payflow/, /payflow payments/],
+            'B3': [/b3\.com\.br/, /powered by b3/, /b3 payments/],
+            'EBANX': [/ebanx\.com/, /powered by ebanx/, /ebanx payments/],
+            'Magento': [/magento\.com/, /powered by magento/, /magento payments/],
+            'Braspag': [/braspag\.com\.br/, /powered by braspag/, /braspag payments/],
+            'VTEX': [/vtex\.com\.br/, /powered by vtex/, /vtex\.com/, /vtex payments/],
 
             // Detecção de CAPTCHA e reCAPTCHA
-            'CAPTCHA': [/captcha/, /g-recaptcha/, /recaptcha/],
-
-            // Genéricos
-            'Credit Card': [/card number/, /cvc/],
+            'CAPTCHA': [/captcha/, /g-recaptcha/, /recaptcha/, /captcha\.v3/],
         };
 
         const detected = [];
         let captchaDetected = false;
+
+        // Analisa apenas as áreas relevantes
+        const paymentSections = $('div:contains("payment"), div:contains("checkout"), form:contains("payment")').html() || htmlLower;
+
         for (const [gateway, patterns] of Object.entries(gateways)) {
-            if (patterns.some(pattern => pattern.test(htmlLower))) {
-                detected.push(gateway);
+            if (patterns.some(pattern => pattern.test(paymentSections))) {
                 if (gateway === 'CAPTCHA') {
                     captchaDetected = true;
+                } else {
+                    detected.push(gateway);
                 }
             }
         }
@@ -198,10 +214,11 @@ app.get('/detect', async (req, res) => {
             captchaDetected: captchaDetected
         });
     } catch (error) {
+        console.error('Erro:', error);
         res.status(500).send(`Erro: ${error.message}`);
     }
 });
 
 app.listen(port, () => {
-    console.log(`Servidor rodando em http://localhost:${port}`);
+    console.log(`Servidor rodando na porta ${port}`);
 });
