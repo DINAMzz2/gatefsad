@@ -2,7 +2,7 @@ const express = require('express');
 const puppeteer = require('puppeteer');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000; // Utilizando a variável de ambiente PORT
 
 app.get('/', (req, res) => {
     res.send(`
@@ -104,24 +104,32 @@ app.get('/', (req, res) => {
                     noCaptchaDiv.style.display = "none";
 
                     try {
-                        const response = await fetch(\`/detect?url=\${encodeURIComponent(url)}\`);
+                        const response = await fetch(`/detect?url=${encodeURIComponent(url)}`);
 
+                        // Verifica se a resposta foi bem-sucedida
                         if (!response.ok) {
-                            throw new Error(\`Erro no servidor: \${response.status} - \${response.statusText}\`);
+                            throw new Error(`Erro no servidor: ${response.status} - ${response.statusText}`);
                         }
 
-                        const result = await response.json();
-                        resultDiv.textContent = result.detected;
+                        // Verifica se a resposta é JSON
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.includes("application/json")) {
+                            const result = await response.json();
+                            resultDiv.textContent = result.detected;
 
-                        if (result.captchaDetected) {
-                            captchaDiv.textContent = "CAPTCHA Detectado!";
-                            captchaDiv.style.display = "block";
+                            if (result.captchaDetected) {
+                                captchaDiv.textContent = "CAPTCHA Detectado!";
+                                captchaDiv.style.display = "block";
+                            } else {
+                                noCaptchaDiv.textContent = "Nenhum CAPTCHA Detectado.";
+                                noCaptchaDiv.style.display = "block";
+                            }
                         } else {
-                            noCaptchaDiv.textContent = "Nenhum CAPTCHA Detectado.";
-                            noCaptchaDiv.style.display = "block";
+                            // Se não for JSON, exibe o erro de resposta inesperada
+                            throw new Error("Resposta inesperada do servidor. Não é um JSON válido.");
                         }
                     } catch (error) {
-                        resultDiv.textContent = \`Erro ao detectar: \${error.message}\`;
+                        resultDiv.textContent = `Erro ao detectar: ${error.message}`;
                         captchaDiv.style.display = "none";
                         noCaptchaDiv.style.display = "none";
                     }
@@ -135,7 +143,7 @@ app.get('/', (req, res) => {
 app.get('/detect', async (req, res) => {
     const url = req.query.url;
     if (!url) {
-        return res.status(400).send('URL is required');
+        return res.status(400).send('URL é obrigatória');
     }
 
     try {
@@ -148,9 +156,42 @@ app.get('/detect', async (req, res) => {
         const htmlLower = content.toLowerCase();
 
         const gateways = {
+            // Adicione aqui seus padrões de gateway...
             'PayPal': [/paypal/, /pp\.com/, /paypal\.com/],
             'Stripe': [/stripe/, /card payments/, /stripe checkout/, /powered by stripe/, /stripe.com/],
+            'Square': [/squareup/, /square.com/],
+            'Adyen': [/adyen/, /adyen.com/],
+            'Worldpay': [/worldpay/, /worldpay.com/],
+            'Authorize.Net': [/authorize.net/, /authorize.net/],
+            '2Checkout': [/2checkout/, /2checkout.com/],
+            'Skrill': [/skrill/, /skrill.com/],
+            'Amazon Pay': [/amazon pay/, /pay.amazon.com/],
+            'Braintree': [/braintree/, /braintreepayments.com/],
+            'WePay': [/wepay/, /wepay.com/],
+
+            // Nacional (Brasil)
+            'Mercado Pago': [/mercadopago/, /mercado pago/, /mercadopago.com.br/],
+            'PagSeguro': [/pagseguro/, /pagseguro.uol.com.br/],
+            'Cielo': [/cielo.com.br/, /cielo/],
+            'Stone': [/stone.com.br/, /stone/],
+            'Oi Pagamentos': [/oi pagamentos/, /oi pagseguro/],
+            'PicPay': [/picpay/, /picpay.com/],
+            'Rede': [/userede.com.br/, /rede/],
+            'Vindi': [/vindi/, /vindi.com.br/],
+            'GetNet': [/getnet/, /getnet.com.br/],
+            'Iugu': [/iugu/, /iugu.com/],
+            'Nuvemshop': [/nuvemshop/, /nuvem shop/, /nuvemshop.com.br/],
+            'Pagar.me': [/pagarme/, /pagar.me/],
+            'Payflow': [/payflow/, /payflow.com.br/],
+            'B3': [/b3/, /b3.com.br/],
+            'EBANX': [/ebanx/, /ebanx.com/],
+            'Magento': [/magento/, /magento.com/],
+            'Braspag': [/braspag/, /braspag.com.br/],
+
+            // Detecção de CAPTCHA e reCAPTCHA
             'CAPTCHA': [/captcha/, /g-recaptcha/, /recaptcha/],
+
+            // Genéricos
             'Credit Card': [/card number/, /cvc/],
         };
 
