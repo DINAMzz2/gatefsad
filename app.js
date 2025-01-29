@@ -80,48 +80,42 @@ app.get('/', (req, res) => {
         <body>
             <div class="container">
                 <h1>Detector de Gateways de Pagamento do H7</h1>
-                <input type="text" id="urlInput" placeholder="https://mybrand.shoes/en/content/6-payment-methods">
+                <input type="text" id="urlInput" placeholder="Digite URLs separadas por espaço">
                 <button onclick="detectPaymentGateway()">Detectar</button>
                 <div class="result" id="result"></div>
-                <div class="captcha-status" id="captchaStatus"></div>
-                <div class="no-captcha" id="noCaptchaStatus"></div>
             </div>
             <script>
                 async function detectPaymentGateway() {
-                    const url = document.getElementById('urlInput').value.trim();
+                    const urls = document.getElementById('urlInput').value.trim().split(' ').map(url => url.trim());
                     const resultDiv = document.getElementById('result');
-                    const captchaDiv = document.getElementById('captchaStatus');
-                    const noCaptchaDiv = document.getElementById('noCaptchaStatus');
 
-                    if (!url) {
-                        resultDiv.textContent = "Insira uma URL válida.";
-                        captchaDiv.style.display = "none";
-                        noCaptchaDiv.style.display = "none";
+                    if (!urls || urls.length === 0) {
+                        resultDiv.textContent = "Insira URLs válidas.";
                         return;
                     }
 
-                    resultDiv.textContent = "Detectando... (pode levar 20 segundos)";
-                    captchaDiv.style.display = "none";
-                    noCaptchaDiv.style.display = "none";
+                    resultDiv.textContent = "Detectando... (pode levar alguns segundos)";
+                    let results = "";
 
-                    try {
-                        const response = await fetch(\`/detect?url=\${encodeURIComponent(url)}\`);
-                        const result = await response.json();
+                    for (const url of urls) {
+                        try {
+                            const response = await fetch(\`/detect?url=\${encodeURIComponent(url)}\`);
+                            const result = await response.json();
 
-                        resultDiv.textContent = result.detected;
+                            results += \`<strong>Resultado para \${url}:</strong><br>\${result.detected}<br>\`;
 
-                        if (result.captchaDetected) {
-                            captchaDiv.textContent = "CAPTCHA Detectado!";
-                            captchaDiv.style.display = "block";
-                        } else {
-                            noCaptchaDiv.textContent = "Nenhum CAPTCHA Detectado.";
-                            noCaptchaDiv.style.display = "block";
+                            if (result.captchaDetected) {
+                                results += \`<span style="color: red;">✔ CAPTCHA Detectado!</span><br><br>\`;
+                            } else {
+                                results += \`<span style="color: green;">❌ Nenhum CAPTCHA Detectado.</span><br><br>\`;
+                            }
+
+                        } catch (error) {
+                            results += \`Erro ao detectar para \${url}: \${error.message}<br><br>\`;
                         }
-                    } catch (error) {
-                        resultDiv.textContent = \`Erro: \${error.message}\`;
-                        captchaDiv.style.display = "none";
-                        noCaptchaDiv.style.display = "none";
                     }
+
+                    resultDiv.innerHTML = results;
                 }
             </script>
         </body>
@@ -132,7 +126,14 @@ app.get('/', (req, res) => {
 app.get('/detect', async (req, res) => {
     const url = req.query.url;
     if (!url) {
-        return res.status(400).send('URL is required');
+        return res.status(400).send('URL é obrigatória');
+    }
+
+    // Verificar se a URL é válida
+    try {
+        const newUrl = new URL(url);  // Tentativa de criar um objeto URL válido
+    } catch (error) {
+        return res.status(400).json({ error: 'URL inválida. Certifique-se de incluir o protocolo (http:// ou https://).' });
     }
 
     try {
@@ -141,7 +142,7 @@ app.get('/detect', async (req, res) => {
         const $ = cheerio.load(htmlLower);
 
         const gateways = {
-            // Global
+            // (defina seus gateways aqui como no código anterior)
             'PayPal': [/paypal\.com/, /pp\.com/, /paypal checkout/, /powered by paypal/, /paypal\//],
             'Stripe': [
                 /stripe\.com/,
@@ -196,7 +197,6 @@ app.get('/detect', async (req, res) => {
         const detected = [];
         let captchaDetected = false;
 
-        // Analisa apenas as áreas relevantes
         const paymentSections = $('div:contains("payment"), div:contains("checkout"), form:contains("payment")').html() || htmlLower;
 
         for (const [gateway, patterns] of Object.entries(gateways)) {
@@ -215,7 +215,7 @@ app.get('/detect', async (req, res) => {
         });
     } catch (error) {
         console.error('Erro:', error);
-        res.status(500).send(`Erro: ${error.message}`);
+        res.status(500).json({ error: `Erro ao tentar acessar a URL: ${error.message}` });
     }
 });
 
