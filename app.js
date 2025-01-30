@@ -143,32 +143,20 @@ app.get('/detect', async (req, res) => {
 
         const gateways = {
             // (defina seus gateways aqui como no código anterior)
-            'PayPal': [/paypal\.com/, /pp\.com/, /paypal checkout/, /powered by paypal/, /paypal\//],
-            'Stripe': [
-                /stripe\.com/,
-                /stripe checkout/,
-                /powered by stripe/,
-                /card payments with stripe/,
-                /stripe\.js/,
-                /stripe gateway/,
-                /stripe\.api/,
-                /stripe integration/,
-                /powered by stripe\./,
-                /using stripe/,
-                /stripe terminal/,
-                /stripe payment/,
-                /stripe connect/,
-                /stripe express/
-            ],
-            'Square': [/squareup\.com/, /square\.com/, /powered by square/, /square payments/],
-            'Adyen': [/adyen\.com/, /powered by adyen/, /adyen checkout/],
-            'Worldpay': [/worldpay\.com/, /powered by worldpay/, /worldpay payments/],
-            'Authorize.Net': [/authorize\.net/, /powered by authorize\.net/, /authorize payments/],
-            '2Checkout': [/2checkout\.com/, /powered by 2checkout/, /2checkout payments/],
-            'Skrill': [/skrill\.com/, /powered by skrill/, /skrill checkout/],
-            'Amazon Pay': [/pay\.amazon\.com/, /powered by amazon pay/, /amazon payments/],
-            'Braintree': [/braintreepayments\.com/, /powered by braintree/, /braintree payments/],
-            'WePay': [/wepay\.com/, /powered by wepay/, /wepay payments/],
+            // Internacionais
+'PayPal': [/paypal\.com/, /pp\.com/, /paypal checkout/, /powered by paypal/, /paypal express/, /paypal.me/, /pague com paypal/, /transação paypal/, /paypal gateway/, /paypal one touch/],
+'Stripe': [/stripe\.com/, /stripe checkout/, /powered by stripe/, /card payments with stripe/, /stripe\.js/, /stripe api/, /stripe integration/, /stripe connect/, /stripe express/, /pagamento com stripe/, /stripe terminal/, /plataforma stripe/],
+'Square': [/squareup\.com/, /square\.com/, /powered by square/, /square payments/, /square checkout/, /square invoicing/, /square online/, /square point of sale/, /square link de pagamento/],
+'Adyen': [/adyen\.com/, /powered by adyen/, /adyen checkout/, /adyen api/, /pagamento com adyen/, /adyen integração/, /soluções adyen/, /adyen pay by link/, /adyen boleto/],
+'Worldpay': [/worldpay\.com/, /powered by worldpay/, /worldpay payments/, /pagamento com worldpay/, /worldpay gateway/, /worldpay checkout/, /worldpay api/, /transação worldpay/],
+'Authorize.Net': [/authorize\.net/, /powered by authorize\.net/, /authorize payments/, /pagamento com authorize\.net/, /authorize.net api/, /authorize checkout/, /authorize.net integração/],
+'2Checkout': [/2checkout\.com/, /powered by 2checkout/, /2checkout payments/, /pagamento com 2checkout/, /2checkout api/, /2checkout integração/, /checkout com 2checkout/],
+'Skrill': [/skrill\.com/, /powered by skrill/, /skrill checkout/, /pagamento com skrill/, /skrill transferência/, /skrill carteira digital/, /skrill api/, /skrill integração/],
+'Amazon Pay': [/pay\.amazon\.com/, /powered by amazon pay/, /amazon payments/, /pague com amazon pay/, /amazon pay checkout/, /amazon pay api/, /amazon pay link de pagamento/],
+'Braintree': [/braintreepayments\.com/, /powered by braintree/, /braintree payments/, /braintree checkout/, /pagamento com braintree/, /braintree api/, /braintree integração/, /braintree gateway/],
+'WePay': [/wepay\.com/, /powered by wepay/, /wepay payments/, /pagamento com wepay/, /wepay api/, /wepay integração/, /wepay checkout/],
+'Spreedly': [/spreedly\.com/, /powered by spreedly/, /spreedly api/, /checkout spreedly/, /spreedly vault/, /tokenization by spreedly/, /spreedly gateway/, /secure payments spreedly/, /payment orchestration spreedly/],
+
 
             // Nacional (Brasil)
 'Mercado Pago': [/mercadopago\.com\.br/, /mercado pago/, /checkout mercado pago/, /pagamento com mercado pago/, /mercado pago transparente/, /parcelamento mercado pago/, /mp pagamentos/],
