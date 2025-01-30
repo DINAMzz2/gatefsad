@@ -180,8 +180,40 @@ app.get('/detect', async (req, res) => {
 'VTEX': [/vtex\.com\.br/, /pagamento com vtex/, /checkout vtex/, /vtex ecommerce/, /vtex carrinho/, /soluções vtex/, /api vtex/],
 
 
-            // Detecção de CAPTCHA e reCAPTCHA
-            'CAPTCHA': [/captcha/, /g-recaptcha/, /recaptcha/, /captcha\.v3/],
+            // Detecção de CAPTCHA e reCAPTCHa
+'CAPTCHA': [
+    /captcha/, 
+    /g-recaptcha/, 
+    /recaptcha/, 
+    /captcha\.v3/, 
+    /hcaptcha/, 
+    /data-sitekey/, 
+    /cf-turnstile/, 
+    /cloudflare turnstile/, 
+    /protected by recaptcha/, 
+    /challenge-form/, 
+    /security check/, 
+    /verifique se você é humano/, 
+    /prove que não é um robô/, 
+    /i'm not a robot/, 
+    /robot verification/, 
+    /anti-bot protection/, 
+    /verify you are human/, 
+    /solve the captcha/, 
+    /human verification/, 
+    /click to verify/, 
+    /complete the security check/, 
+    /confirm you are not a bot/, 
+    /this site is protected by recaptcha/, 
+    /press & hold to verify/, 
+    /please complete the captcha/, 
+    /desafío de seguridad/, 
+    /completar el captcha/, 
+    /validação de segurança/, 
+    /segurança adicional requerida/
+]
+
+
         };
 
         const detected = [];
